@@ -112,7 +112,7 @@ class ChatOutput(object):
         if chan not in self.output_buff:
             return False
         for message in self.output_buff[chan][:howmuch]:
-            self.privmsg(chan, message)
+            self.privmsg(chan, str(message))
         del self.output_buff[chan][:howmuch]
         if not self.output_buff[chan]:
             del self.output_buff[chan]
@@ -126,8 +126,8 @@ class ChatOutput(object):
 
 
 class SimpleBot(object):
-    DEFAULT_MODULES = ( 'core.basic', 'core.chatcommands',) 
-    #        'core.aaa_stuff', 'core.privileged_commands')
+    DEFAULT_MODULES = ( 'core.basic', 'core.chatcommands',#) 
+            'core.aaa_stuff',)# 'core.privileged_commands')
 
     def __init__(self, irc_parser, irc_data, modules=tuple()):
         self._irc_parser = irc_parser
