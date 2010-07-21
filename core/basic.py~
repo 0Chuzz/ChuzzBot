@@ -1,0 +1,37 @@
+from .simplebot import event_for
+
+default_irc_data = {
+        'chans' : [],
+        'motd' : ''
+        }
+
+@event_for('ERROR')
+def on_motding(self, source, junk, error):
+    self.log.error(error)
+
+@event_for('STARTOFMOTD', 'MOTD', 'MOTD2')
+def on_motding(self, source, junk, motd_line):
+    self.irc_data['motd'] += motd_line
+
+@event_for('NOMOTD', 'ENDOFMOTD')
+def on_motd(self, *stuff):
+    for chan in self.irc_data['chans']:
+        self.join(chan)
+
+@event_for('NICKNAMEINUSE')
+def on_nicknameinuse(self, *stuff):
+    self.irc_data['nick'] += '_'
+    self.nick(self.irc_data['nick'])
+
+@event_for('JOIN')
+def on_join(self, source, junk, chan):
+    if source.nick == self.irc_data['nick']:
+        self.talk(chan, 'hi all!')
+    else:
+        self.talk(chan, 'hello {}!'.format(source.nick))
+
+@event_for('PING')
+def on_ping(self, source, stuff, reply):
+    self.send_msg('PONG', trail=reply)
+
+
