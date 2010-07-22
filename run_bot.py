@@ -16,7 +16,7 @@ except ImportError:
 for log in ['IRC parser', 'IRC bot']:
     logging.getLogger(log).setLevel(logging.DEBUG)
 a_parser = irc_async.IRCConnection(('irc.unitx.net', 6697), True)
-a = simplebot.SimpleBot(a_parser, IRC_DATA)
+a = simplebot.SimpleBot(a_parser, IRC_DATA, ('plugins.develbot',))
 if __name__ == '__main__':
     a_parser.start()
     try:

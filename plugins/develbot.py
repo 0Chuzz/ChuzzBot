@@ -1,17 +1,16 @@
-#!python3
+#!/usr/bin/python
 #vim:fileencoding=utf-8
 
-from core.simplebot import command_for
-from core.chatcommands import CommandError
-import urllib.request, urllib.parse, urllib.error
+from core.simplebot import command_for, CommandError
+import urllib
 import os.path
 
 lexerpath = os.path.abspath('lexers')
 
 @command_for('lextest')
-def do_lextest(self, chan, source, args):
+def do_lextest(self, source, chan, args):
     '''MyLexer <test line here>'''
-    lexclass, *args = args
+    lexclass = args.pop(0)
     try:
         lexmodule = __import__("lexers."+lexclass.lower(),
                 globals(), locals(), [lexclass])
@@ -21,7 +20,7 @@ def do_lextest(self, chan, source, args):
         lexr = getattr(lexmodule, lexclass)()
         lexr.write(' '.join(args))
         try:
-                self.talk(chan, iter(lexr))
+                self.do.say(chan, iter(lexr))
         except Exception as e:
             raise CommandError(str(e))
 

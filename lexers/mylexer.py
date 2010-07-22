@@ -54,6 +54,6 @@ if __name__ == '__main__':
         print(inp)
         lx.write(inp+'\n')
         print('TOK:')
-        [print('\t',x) for x in lx]
+        #[print('\t',x) for x in lx]
         print('TOK END')
     input('DONE!')
