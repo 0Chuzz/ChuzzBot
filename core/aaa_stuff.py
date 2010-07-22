@@ -30,7 +30,7 @@ class Auth(Pluggable):
 
     def check_authed(self, source):
         if source not in self.data['authed']:
-            raise CommandError('No authorisation')
+            raise CommandError('No authorization')
 
     def evt_query(self, message):
         source = message.source

@@ -9,10 +9,8 @@ from .irc_async import  Source, IRCMessage
 class CommandError(Exception): 
     pass
 
-
 class Stuffer(object):
     pass
-
 
 class Pluggable(object):
     plug_name = None
@@ -29,10 +27,13 @@ class Pluggable(object):
 
     def evt_call(self,message):
         pass
+    evt_call= None
 
     def on_error(self, errmsg):
         pass
 
+class MainPlug(Pluggable):
+    plug_name = 'Main'
 
 def event_for(*params):
     def event_factor(func):
@@ -127,7 +128,7 @@ class ChatOutput(object):
 
 class SimpleBot(object):
     DEFAULT_MODULES = ( 'core.basic', 'core.chatcommands',#) 
-            'core.aaa_stuff',)# 'core.privileged_commands')
+            'core.aaa_stuff', 'core.privileged_commands')
 
     def __init__(self, irc_parser, irc_data, modules=tuple()):
         self._irc_parser = irc_parser
@@ -140,6 +141,12 @@ class SimpleBot(object):
         self._output = ChatOutput(self.send_msg)
         self.log = logging.getLogger('IRC bot')
         self.log.addHandler(logging.StreamHandler())
+
+        mainplug = MainPlug(self._output, self.plugins, self.irc_data)
+        mainplug.load_mod = self.load_ext_module
+        mainplug.unload_mod = self.unload_ext_module
+        mainplug.reload_mod = self.reload_ext_module
+        self.plugins['main'] = mainplug
 
         modules += self.DEFAULT_MODULES
         for module in modules:
