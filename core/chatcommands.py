@@ -61,7 +61,7 @@ class CommandEvent(Pluggable):
             raise CommandError('empty buffer')
 
     def comm_help(self, who, where, args):
-        func_help = ["{0}: {1}".format(k, v.__doc__ or "no doc") 
+        func_help = ["{0}: {1}".format(k, v.__doc__ or "no help") 
                 for k,v in self.commands.iteritems()]
         self.do.say(where, func_help)
 
