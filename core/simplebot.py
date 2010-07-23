@@ -15,9 +15,15 @@ class Stuffer(object):
 class Pluggable(object):
     plug_name = None
     def __init__(self, do, plugins, irc_data):
+        if hasattr(self.__class__, "_class_mutex"):
+            raise Exception("multiple plugin spawned! " + 
+                    repr(self.__class__._class_mutex) + " " +
+                    repr(self))
+        else:
+            self.__class__._class_mutex = self
         self.do = do
         self.plugins = plugins
-        self.data = irc_data
+        self.data = irc_data 
 
     def start(self):
         pass
@@ -27,7 +33,6 @@ class Pluggable(object):
 
     def evt_call(self,message):
         pass
-    evt_call= None
 
     def on_error(self, errmsg):
         pass
@@ -37,35 +42,29 @@ class MainPlug(Pluggable):
 
 def event_for(*params):
     def event_factor(func):
-        class OnTheFlyEvent(Pluggable):
-            plug_name = func.__name__
-            def evt_check(self, message):
-                if message.command in params:
-                    return self.evt_call
-                else:
-                    return None
-            
-            def evt_call(self, message):
-                func(self, message)
-
-        return OnTheFlyEvent
+        def evt_check(self, message):
+            if message.command in params:
+                return self.evt_call
+            else:
+                return None
+        def evt_call(self, message):
+            func(self, message)
+        nspace = dict(__doc__=func.__doc__, plug_name=func.__name__,
+                evt_check=evt_check, evt_call=evt_call)
+        return type(func.__name__,(Pluggable,), nspace)
     return event_factor
 
 
-def command_for(command_name):
+def command_for(command_name, hlp="no help"):
     def command_factor(func):
-        class OnTheFlyComm(Pluggable):
-            plug_name = func.__name__
-
-            def start(self):
-                myattr = getattr(self, "comm_" + command_name)
-                self.plugins["commands"].register(command_name, myattr)
-
-            def _dummy_comm(self, *args):
-                return func(self, *args)
-
-        setattr(OnTheFlyComm, 'comm_' + command_name, OnTheFlyComm._dummy_comm)
-        return OnTheFlyComm
+        def start(self):
+            myattr = getattr(self, "comm_" + command_name)
+            self.plugins["commands"].register(command_name, myattr)
+        def _dummy_comm(self, *args):
+            return _func(self, *args)
+        nspace = dict(__doc__=hlp, plug_name=func.__name__, start=start)
+        nspace['comm_' + command_name] = func
+        return type(func.__name__, (Pluggable,), nspace)
     return command_factor
 
 
@@ -137,10 +136,9 @@ class SimpleBot(object):
                     )
         self.irc_data = irc_data
         self._modules = {}
-        self.plugins = {}#weakref.WeakValueDictionary()
+        self.plugins = weakref.WeakValueDictionary()
         self._output = ChatOutput(self.send_msg)
         self.log = logging.getLogger('IRC bot')
-        self.log.addHandler(logging.StreamHandler())
 
         mainplug = MainPlug(self._output, self.plugins, self.irc_data)
         mainplug.load_mod = self.load_ext_module
@@ -156,10 +154,14 @@ class SimpleBot(object):
         return getattr(self._irc_parser, attr_name)
 
     def on_connect(self):
-        self.log.debug("start fired. starting {0!s}".format(dict(self.plugins)))
+        self.log.debug("start fired. starting {0!s}".format(
+            self.plugins.keys()))
         for pname, plugin in self.plugins.iteritems():
-            self.log.debug('starting '+pname)
-            plugin.start()
+            try:
+                plugin.start()
+            except Exception as e:
+                self.log.exception("on " + " start")
+                exit()
 
     def load_ext_module(self, module_name):
         self.log.debug("loading " + module_name)
@@ -168,36 +170,29 @@ class SimpleBot(object):
             return
         try:
             #recursively load packag, [])s
-            mdle = Stuffer() 
-            mdle.__path__ = ''
-            mdle.__name__ = ''
-            for package in module_name.split('.'):
-                found_mdle = imp.find_module(package, 
-                        mdle.__path__ or None)
-                mdle = imp.load_module(
-                        mdle.__name__ or mdle.__name__ + '.' + package,
-                        *found_mdle
-                        )
+            mdle = __import__(module_name) 
+            for package in module_name.split('.')[1:]:
+                mdle = getattr(mdle, package)
         except ImportError as e:
-            self.log.error(str(e))
+            self.log.exception(str(e))
             return
 
+        self.log.debug(repr(mdle))
         self._modules[module_name] = mdle
         if hasattr(mdle, 'DEFAULT_IRC_DATA'):
             for option in mdle.DEFAULT_IRC_DATA.iteritems():
                 self.irc_data.setdefault(*option)
         
         #load plugin and commands
-        for module_content in dir(mdle):
-            stuff = getattr(mdle, module_content)
+        for stuffname, stuff in  vars(mdle).iteritems():
             if hasattr(stuff, 'plug_name') and stuff.plug_name:
                 try:
                     plugg = stuff(self._output, self.plugins, self.irc_data)
                 except Exception:
                     err = "{0} in {1} cannot be loaded"
-                    self.log.error(err.format(module_content, module_name))
-                    self.unload_ext(module_name)
-                    return
+                    self.log.exception(err.format(stuffname, module_name))
+                    self.log.debug(dir(mdle))
+                    exit()
                 self.plugins[stuff.plug_name] = plugg
                 self.log.debug('loaded ' + stuff.plug_name)
 

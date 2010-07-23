@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim:fileencoding=utf-8
 
-from .simplebot import event_for, command_for, CommandError, Pluggable
+from .simplebot import command_for, CommandError, Pluggable
 
 DEFAULT_IRC_DATA = {
         'command_str' : '§',
@@ -35,7 +35,7 @@ class CommandEvent(Pluggable):
             try:
                 self.commands[call_args.pop(0)](who, where, call_args)
             except Exception as e:
-                self.do.say(where, 
+                self.do.privmsg(where, 
                   "EXCEPTION: {0.__class__.__name__}: {0!s}".format(e))
 
 

@@ -28,7 +28,6 @@ class IRCConnection(asynchat.async_chat):
         self.set_terminator(b'\r\n')
         self.host = host
         self.log = logging.getLogger('IRC parser')
-        self.log.addHandler(logging.StreamHandler())
         self._on_connect, self._on_event = None, None
 
     def start(self):
