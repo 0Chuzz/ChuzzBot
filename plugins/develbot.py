@@ -7,8 +7,9 @@ import os.path
 
 lexerpath = os.path.abspath('lexers')
 
-@command_for('lextest', 'MyLexer <test line here>')
+@command_for('lextest')
 def do_lextest(self, source, chan, args):
+    'MyLexer <test line here>'
     lexclass = args.pop(0)
     try:
         lexmodule = __import__("lexers."+lexclass.lower(),

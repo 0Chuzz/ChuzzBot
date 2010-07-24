@@ -49,14 +49,12 @@ def event_for(*params):
     return event_factor
 
 
-def command_for(command_name, hlp="no help"):
+def command_for(command_name):
     def command_factor(func):
         def start(self):
             myattr = getattr(self, "comm_" + command_name)
             self.plugins["commands"].register(command_name, myattr)
-        def _dummy_comm(self, *args):
-            return _func(self, *args)
-        nspace = dict(__doc__=hlp, plug_name=func.__name__, start=start)
+        nspace = dict(plug_name=func.__name__, start=start)
         nspace['comm_' + command_name] = func
         return type(func.__name__, (Pluggable,), nspace)
     return command_factor
