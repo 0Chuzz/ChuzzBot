@@ -15,12 +15,6 @@ class Stuffer(object):
 class Pluggable(object):
     plug_name = None
     def __init__(self, do, plugins, irc_data):
-        if hasattr(self.__class__, "_class_mutex"):
-            raise Exception("multiple plugin spawned! " + 
-                    repr(self.__class__._class_mutex) + " " +
-                    repr(self))
-        else:
-            self.__class__._class_mutex = self
         self.do = do
         self.plugins = plugins
         self.data = irc_data 
@@ -136,7 +130,7 @@ class SimpleBot(object):
                     )
         self.irc_data = irc_data
         self._modules = {}
-        self.plugins = weakref.WeakValueDictionary()
+        self.plugins = {}#weakref.WeakValueDictionary()
         self._output = ChatOutput(self.send_msg)
         self.log = logging.getLogger('IRC bot')
 
