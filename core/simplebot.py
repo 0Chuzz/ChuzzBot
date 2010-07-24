@@ -18,8 +18,14 @@ class Pluggable(object):
         self.do = do
         self.plugins = plugins
         self.data = irc_data 
+    
+    def plug_load(self):
+        pass
 
     def start(self):
+        pass
+
+    def plug_unload(self):
         pass
 
     def evt_check(self, message):
@@ -51,10 +57,10 @@ def event_for(*params):
 
 def command_for(command_name):
     def command_factor(func):
-        def start(self):
+        def plug_load(self):
             myattr = getattr(self, "comm_" + command_name)
             self.plugins["commands"].register(command_name, myattr)
-        nspace = dict(plug_name=func.__name__, start=start)
+        nspace = dict(plug_name=func.__name__, plug_load=plug_load)
         nspace['comm_' + command_name] = func
         return type(func.__name__, (Pluggable,), nspace)
     return command_factor
@@ -138,7 +144,7 @@ class SimpleBot(object):
         mainplug.reload_mod = self.reload_ext_module
         self.plugins['main'] = mainplug
 
-        modules += self.DEFAULT_MODULES
+        modules = self.DEFAULT_MODULES + modules
         for module in modules:
             self.load_ext_module(module)
 
@@ -180,17 +186,19 @@ class SimpleBot(object):
             if hasattr(stuff, 'plug_name') and stuff.plug_name:
                 try:
                     plugg = stuff(self._output, self.plugins, self.irc_data)
+                    self.plugins[stuff.plug_name] = plugg
+                    plugg.plug_load()
                 except Exception:
                     err = "{0} in {1} cannot be loaded"
                     self.log.exception(err.format(stuffname, module_name))
                     self.log.debug(dir(mdle))
                     exit()
-                self.plugins[stuff.plug_name] = plugg
                 self.log.debug('loaded ' + stuff.plug_name)
 
     def unload_ext_module(self, module_name):
         try:
-            p = self._modules[module_name]
+            self._modules[module_name].plug_unload()
+            del self._modules[module_name]
         except KeyError:
             self.log.error("unload {0}: no such module".format(module_name))
         else:

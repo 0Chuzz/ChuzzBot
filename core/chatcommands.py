@@ -11,7 +11,7 @@ DEFAULT_IRC_DATA = {
 class CommandEvent(Pluggable):
     plug_name = "commands"
 
-    def start(self):
+    def plug_load(self):
         self.commands = dict(
                 more=self.comm_more,
                 nomore=self.comm_nomore,

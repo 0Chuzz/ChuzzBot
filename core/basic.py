@@ -5,8 +5,8 @@ DEFAULT_IRC_DATA = {
         'user' : "bot_user",
         'info' : "Python Bot",
         'chans' : [],
-        'motd' : ''
-        'annoy': False
+        'motd' : '',
+        'annoy': False,
         }
 
 class DefaultStartup(Pluggable):

@@ -11,6 +11,6 @@ working code and hopefully a decent test coverage.
 
 TO-DO
 -----
-- implement Pluggable.plug\_load() and plug\_unload()
+- implement Pluggable.plug\_load() and plug\_unload() #DONE#
 - hack something to modify simplebot.plugins while iterating it
 - improve dinamic plugin system, load plugins and modules
