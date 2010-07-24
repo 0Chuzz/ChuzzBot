@@ -1,10 +1,16 @@
 Chuzz Bot
 =========
 
-version 0.0.9002
+version 0.0.9003
 
 work in progress
 ----------------
 
 i'm still cleaning the old code as you can see. version 0.1.0 will have 
 working code and hopefully a decent test coverage.
+
+TO-DO
+-----
+- implement Pluggable.plug\_load() and plug\_unload()
+- hack something to modify simplebot.plugins while iterating it
+- improve dinamic plugin system, load plugins and modules

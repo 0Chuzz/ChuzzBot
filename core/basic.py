@@ -6,6 +6,7 @@ DEFAULT_IRC_DATA = {
         'info' : "Python Bot",
         'chans' : [],
         'motd' : ''
+        'annoy': False
         }
 
 class DefaultStartup(Pluggable):
@@ -37,8 +38,9 @@ def greetz(bot, message):
     if message.source.nick == bot.data['nick']:
         bot.do.say(message.trail, 'hi all!')
     else:
-        bot.do.say(message.trail, 
-                'hello {0}!'.format(message.source.nick))
+        if bot.data['annoy']:
+            bot.do.say(message.trail, 
+                    'hello {0}!'.format(message.source.nick))
 
 @event_for('PING')
 def ping_reply(bot, message):
