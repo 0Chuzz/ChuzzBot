@@ -7,18 +7,18 @@ import logging
 import logging.config
 
 try:
-    from config import IRC_DATA
+    from config import IRC_DATA, PLUGINS
 except ImportError:
     print "Missing config.py, run"
-    print "$ echo \"IRC_DATA = {}\" > config.py"
+    print "$ echo \"IRC_DATA={};PLUGINS=[]\" > config.py"
     print "to get a quick fix."
     exit()
 
 logging.config.fileConfig("logger.conf")
 a_parser = irc_async.IRCConnection(('kama.it.cx', 6697), True)
 b_parser = irc_async.IRCConnection(('irc.unitx.net', 6697), True)
-a = simplebot.SimpleBot(a_parser, IRC_DATA, ('plugins.develbot',))
-b = simplebot.SimpleBot(b_parser, IRC_DATA, ('plugins.develbot',))
+a = simplebot.SimpleBot(a_parser, IRC_DATA, PLUGINS)
+b = simplebot.SimpleBot(b_parser, IRC_DATA, PLUGINS)
 if __name__ == '__main__':
     a_parser.start()
     b_parser.start()
