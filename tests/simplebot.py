@@ -35,9 +35,9 @@ class TestDecorators(unittest.TestCase):
         fake = Mock()
         fake.__name__ = "fake"
         tfunc = simplebot.command_for("test")(fake)
-        self.assertEqual(tfunc.plug_name, "test")
+        self.assertEqual(tfunc.plug_name, "fake")
         self.assertTrue(hasattr(tfunc, "comm_test"))
-        tfunc(1,2,3).comm_test()
+        tfunc({},dict(commands=Mock()),{}).comm_test()
         self.assertTrue(fake.called)
 
 
@@ -79,7 +79,7 @@ class TestChatOutput(unittest.TestCase):
 
 
 class TestSimpleBot(unittest.TestCase):
-    def setUp():
+    def setUp(self):
         self.parser = Mock()
 
     def test_creation(self):
