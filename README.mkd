@@ -1,7 +1,7 @@
 Chuzz Bot
 =========
 
-version 0.0.9003
+version 0.0.9004
 
 work in progress
 ----------------
@@ -12,5 +12,5 @@ working code and hopefully a decent test coverage.
 TO-DO
 -----
 - implement Pluggable.plug\_load() and plug\_unload() #DONE#
-- hack something to modify simplebot.plugins while iterating it
-- improve dinamic plugin system, load plugins and modules
+- hack something to modify simplebot.plugins while iterating it #NOTAPROBLEM#
+- improve dinamic plugin system, load plugins and modules 30%

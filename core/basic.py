@@ -13,7 +13,6 @@ class DefaultStartup(Pluggable):
     plug_name = "bot_startup"
     def start(self):
         #NICK botnick\r\n
-        print "***SENDING NICK ***"
         self.do.nick(self.data['nick'])
         #USER bot_user 0 irc.server.on :bot info (or real name?)
         self.do.user(self.data['user'], '0', '*', self.data['info'])

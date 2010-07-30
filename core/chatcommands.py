@@ -42,6 +42,10 @@ class CommandEvent(Pluggable):
     def register(self, name, func):
         self.commands[name] = func
 
+    def unregister(self, name):
+        if name in self.commands:
+            del self.commands[name]
+
     def comm_more(self, who, where, args):
         '''<qty>'''
         try:

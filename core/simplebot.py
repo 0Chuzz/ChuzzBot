@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import logging
-import imp
 import weakref
 from .irc_async import  Source, IRCMessage
 
@@ -18,6 +17,10 @@ class Pluggable(object):
         self.do = do
         self.plugins = plugins
         self.data = irc_data 
+        self.plug_load()
+
+    def __del__(self):
+        self.plug_unload()
     
     def plug_load(self):
         pass
@@ -60,7 +63,10 @@ def command_for(command_name):
         def plug_load(self):
             myattr = getattr(self, "comm_" + command_name)
             self.plugins["commands"].register(command_name, myattr)
-        nspace = dict(plug_name=func.__name__, plug_load=plug_load)
+        def plug_unload(self):
+            self.plugins["commands"].register(command_name)
+        nspace = dict(plug_name=func.__name__, plug_load=plug_load,
+                plug_unload=plug_unload)
         nspace['comm_' + command_name] = func
         return type(func.__name__, (Pluggable,), nspace)
     return command_factor
@@ -134,7 +140,7 @@ class SimpleBot(object):
                     )
         self.irc_data = irc_data
         self._modules = {}
-        self.plugins = {}#weakref.WeakValueDictionary()
+        self.plugins = weakref.WeakValueDictionary()
         self._output = ChatOutput(self.send_msg)
         self.log = logging.getLogger('IRC bot')
 
@@ -176,28 +182,31 @@ class SimpleBot(object):
             return
 
         self.log.debug(repr(mdle))
-        self._modules[module_name] = mdle
         if hasattr(mdle, 'DEFAULT_IRC_DATA'):
             for option in mdle.DEFAULT_IRC_DATA.iteritems():
                 self.irc_data.setdefault(*option)
         
-        #load plugin and commands
+        #load plugins
+        mdle_plugins = []
         for stuffname, stuff in  vars(mdle).iteritems():
-            if hasattr(stuff, 'plug_name') and stuff.plug_name:
-                try:
-                    plugg = stuff(self._output, self.plugins, self.irc_data)
-                    self.plugins[stuff.plug_name] = plugg
-                    plugg.plug_load()
-                except Exception:
-                    err = "{0} in {1} cannot be loaded"
-                    self.log.exception(err.format(stuffname, module_name))
-                    self.log.debug(dir(mdle))
-                    exit()
-                self.log.debug('loaded ' + stuff.plug_name)
+            if not hasattr(stuff, 'plug_name') or not stuff.plug_name:
+                continue
+            try:
+                plugg = stuff(self._output, self.plugins, self.irc_data)
+            except Exception:
+                err = "{0} in {1} cannot be loaded"
+                self.log.exception(err.format(stuffname, module_name))
+                self.log.debug(dir(mdle))
+                exit()
+            self.plugins[stuff.plug_name] = plugg
+            mdle_plugins.append(plugg)
+            self.log.debug('loaded ' + stuff.plug_name)
+
+        self._modules[module_name] = (mdle,mdle_plugins)
+
 
     def unload_ext_module(self, module_name):
         try:
-            self._modules[module_name].plug_unload()
             del self._modules[module_name]
         except KeyError:
             self.log.error("unload {0}: no such module".format(module_name))
@@ -209,7 +218,7 @@ class SimpleBot(object):
         self.load_ext_module(module_name)
 
     def event(self, message):
-        for evt in self.plugins.itervalues():
+        for evt in self.plugins.values():
             try:
                 evt_f = evt.evt_check(message)
                 if evt_f:
